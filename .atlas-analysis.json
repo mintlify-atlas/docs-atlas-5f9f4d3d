@@ -1,0 +1,55 @@
+{
+  "projectType": "general",
+  "projectName": "Recipes & Food Manager",
+  "projectDescription": "A Python CLI/desktop application for managing food items and recipes, planning diets, and tracking nutrition and economic statistics.",
+  "theme": "almond",
+  "primaryColor": "#E07B39",
+  "lightColor": "#FAF0E6",
+  "darkColor": "#7A3B1E",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": ["concepts/food-objects", "concepts/recipe-objects", "concepts/data-storage"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/managing-food", "guides/creating-recipes", "guides/planning-diets", "guides/statistics"]
+          },
+          {
+            "group": "Configuration",
+            "pages": ["configuration/settings"]
+          },
+          {
+            "group": "Project",
+            "pages": ["project/roadmap", "project/architecture", "project/changelog"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Food item management with price (€/kg), energy (kcal/100g), and nutritional data",
+    "Recipe creation linking food items with quantities and preparation time",
+    "Diet planning using defined food and recipes",
+    "Nutrition and economic statistics tracking",
+    "JSON-based local data persistence",
+    "YAML-based configuration with sensible defaults",
+    "Unit-aware food multiplication (e.g. by number of units)"
+  ],
+  "publicApiSurface": [
+    "Food object (id, price, energy, unit)",
+    "Recipe object (name/id, food list, preparation time, comments)",
+    "BaseClass (save/load from JSON/YAML, shared instance tracking)",
+    "settings.SETTINGS (merged user+default configuration dict)",
+    "functions.function1 (placeholder for core functions)",
+    "utils package (utility helpers)"
+  ]
+}
