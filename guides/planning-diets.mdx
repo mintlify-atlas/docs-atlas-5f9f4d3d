@@ -1,0 +1,91 @@
+---
+title: 'Planning diets'
+description: 'Understand the diet planning roadmap and learn how to approximate weekly nutrition and cost tracking today using recipes and manual stat aggregation.'
+---
+
+<Info>
+  Diet planning is a planned feature. The calendar-based diet system described below is on the roadmap and not yet implemented. See the [roadmap](/project/roadmap) for the full list of upcoming features.
+</Info>
+
+## What diet planning will look like
+
+When the diet feature ships, a Diet will be a calendar-style object that assigns Recipes and individual Food items to specific days. You will be able to:
+
+<CardGroup cols={2}>
+  <Card title="Day-by-day meal assignment" icon="calendar">
+    Assign one or more recipes (or raw foods) to each day of the week.
+  </Card>
+  <Card title="Nutrition summary" icon="chart-bar">
+    View total kcal and macronutrient intake across the full diet period.
+  </Card>
+  <Card title="Cost summary" icon="euro">
+    See the total grocery cost and a per-day breakdown.
+  </Card>
+  <Card title="Ingredient list" icon="list">
+    Generate a combined shopping list from all recipes in the diet.
+  </Card>
+</CardGroup>
+
+## Approximating diet tracking today
+
+Until the Diet object is available, you can combine multiple Recipe stats calls to get a period summary.
+
+<Steps>
+  <Step title="Collect the recipes for your week">
+    Load all foods and recipes you plan to use.
+
+    ```python
+    from food import Food
+    from recipe import Recipe
+
+    Food.from_file("foods.json")
+    Recipe.from_file("recipes.json")
+
+    recipes = Recipe.instances()
+    ```
+  </Step>
+
+  <Step title="Define your daily meal plan as a list">
+    Map each day to the recipe ids you intend to eat.
+
+    ```python
+    weekly_plan = [
+        ["omelette", "lentil_soup"],   # Monday
+        ["omelette", "pasta_tomato"],   # Tuesday
+        ["greek_salad", "lentil_soup"], # Wednesday
+        # ... etc.
+    ]
+    ```
+  </Step>
+
+  <Step title="Sum the stats across the week">
+    Iterate over the plan and accumulate totals.
+
+    ```python
+    total_kcal  = 0.0
+    total_price = 0.0
+
+    for day in weekly_plan:
+        for recipe_id in day:
+            s = recipes[recipe_id].stats()
+            total_kcal  += s["total_kcal"]
+            total_price += s["total_price"]
+
+    print(f"Week total: {total_kcal:.0f} kcal, €{total_price:.2f}")
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  This manual approach does not account for ingredient deduplication when building a shopping list. The upcoming Diet feature will handle that automatically.
+</Note>
+
+## Planned diet summary features
+
+The roadmap includes the following outputs from a Diet object once it is implemented:
+
+| Summary | Description |
+|---|---|
+| Nutrition totals | Aggregate kcal (and future macros) across all days. |
+| Cost totals | Total spend and average daily cost for the diet period. |
+| Ingredient list | Deduplicated shopping list with quantities per ingredient. |

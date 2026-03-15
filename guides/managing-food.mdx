@@ -1,0 +1,158 @@
+---
+title: 'Managing food items'
+description: 'Learn how to create, load, modify, and save Food objects including unit-based multiplication and JSON/YAML persistence.'
+---
+
+Food items are the building blocks of recipes and diet plans. Each Food object stores the identifiers and nutritional data needed to calculate costs and calorie totals across your library.
+
+## Food object properties
+
+<CardGroup cols={3}>
+  <Card title="id" icon="tag">
+    A unique name that identifies the food item across your library.
+  </Card>
+  <Card title="price" icon="euro">
+    Cost in euros per kilogram (€/kg).
+  </Card>
+  <Card title="energy" icon="zap">
+    Caloric content in kcal per 100 grams.
+  </Card>
+</CardGroup>
+
+The optional `unit` property enables unit-based calculations when a food is sold or consumed in discrete units (e.g., eggs, apples).
+
+## Creating a food item
+
+<Steps>
+  <Step title="Define the food id, price, and energy">
+    Instantiate a `Food` object with a unique `id`, a price in €/kg, and energy in kcal/100g.
+
+    ```python
+    from food import Food
+
+    olive_oil = Food(
+        id="olive_oil",
+        price=6.50,    # €/kg
+        energy=884,    # kcal/100g
+    )
+    ```
+  </Step>
+
+  <Step title="Set the optional unit property">
+    If the food is sold or measured in discrete units, provide the `unit` field with the weight in grams per unit.
+
+    ```python
+    egg = Food(
+        id="egg",
+        price=3.20,    # €/kg
+        energy=155,    # kcal/100g
+        unit=60,       # grams per egg
+    )
+    ```
+
+    <Tip>
+      Set `unit` whenever you want to express quantities as a count (e.g., "3 eggs") rather than a weight.
+    </Tip>
+  </Step>
+
+  <Step title="Add the food to the library">
+    The `BaseClass` keeps all instances as a class-level collection. Adding your object registers it automatically.
+
+    ```python
+    # The instance is registered on creation.
+    # Retrieve all food items:
+    all_foods = Food.instances()
+    ```
+
+    <Warning>
+      If you create a Food with an `id` that already exists in the library, the existing entry is overwritten. The previous values are logged as an alert before the overwrite occurs. Review your logs when loading new data to catch accidental duplicates.
+    </Warning>
+  </Step>
+</Steps>
+
+## Calculating cost and kcal by weight
+
+Multiply a Food object by a gram amount to get the proportional cost and calorie values.
+
+```python
+# 250 grams of olive oil
+result = olive_oil * 250
+# Returns total price (€) and total kcal for 250 g
+```
+
+The multiplication scales both `price` and `energy` linearly from the per-kg and per-100g base values.
+
+## Calculating by units
+
+When a Food has the `unit` property set, you can multiply using the `"{number}u"` string syntax to express quantity as a unit count.
+
+```python
+# 3 eggs
+result = egg * "3u"
+# Equivalent to egg * (3 * 60)  →  egg * 180 g
+```
+
+<Warning>
+  If you use unit syntax (`"3u"`) on a Food that does **not** have the `unit` property set, the app falls back to multiplying by 100 grams per unit and logs an alert. Always set `unit` before using unit-based multiplication to avoid inaccurate calculations.
+</Warning>
+
+## Loading food data from JSON
+
+Food data is persisted as JSON (or YAML) files and read back through `BaseClass` deserialization.
+
+```python
+Food.from_file("foods.json")
+```
+
+Example `foods.json` structure:
+
+```json
+[
+  {
+    "id": "olive_oil",
+    "price": 6.50,
+    "energy": 884
+  },
+  {
+    "id": "egg",
+    "price": 3.20,
+    "energy": 155,
+    "unit": 60
+  }
+]
+```
+
+<Note>
+  Any extra properties in the JSON (such as `comments`) are preserved when loading and saving, because `Food` inherits from `BaseClass` which allows extra fields.
+</Note>
+
+## Saving food data
+
+Save the current library to disk in JSON or YAML format.
+
+<CodeGroup>
+
+```python save as JSON
+Food.save_to_file("foods.json")
+```
+
+```python save as YAML
+Food.save_to_file("foods.yaml")
+```
+
+</CodeGroup>
+
+The resulting YAML for the same food items:
+
+```yaml
+- id: olive_oil
+  price: 6.5
+  energy: 884
+
+- id: egg
+  price: 3.2
+  energy: 155
+  unit: 60
+```
+
+`BaseClass` converts the object to a dict before serialization, so every property (including extras) is written out.

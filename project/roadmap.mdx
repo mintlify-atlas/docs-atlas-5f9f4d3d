@@ -1,0 +1,54 @@
+---
+title: Roadmap
+description: Current development status and planned features for the Recipes & Food Manager.
+---
+
+This page tracks what has been built, what is in progress, and what is planned for future releases.
+
+## Current status — Minimum Viable Product
+
+The MVP focuses on the core data model and persistence layer.
+
+<Check>Food object — define foods with id, price, energy, and optional unit property.</Check>
+<Check>Recipe object — group foods with quantities, preparation time, and comments.</Check>
+<Check>Loading and saving data to JSON — persist the food and recipe databases between sessions.</Check>
+
+<Info>
+  The following MVP items are still in progress:
+
+  - Substantial database items — populate the food and recipe databases with real-world examples.
+  - Showing statistics and costs — compute and display nutrition totals and cost summaries.
+</Info>
+
+---
+
+## Planned features
+
+<AccordionGroup>
+  <Accordion title="Unit support in Food">
+    Add an optional `unit` property to the `Food` object. When present, a unit represents a fixed gram quantity, so multiplying by `"{number}u"` scales by units rather than raw grams.
+
+    - Multiplication by units scales amount by the quantity a unit represents.
+    - Multiplying by units on a `Food` without a `unit` property logs an alert and falls back to multiplying by 100.
+  </Accordion>
+
+  <Accordion title="Logging">
+    Integrate Python's `logging` module to record significant runtime events:
+
+    - Log when an existing food or recipe object is overwritten, including its previous value.
+    - Log invalid multiplications, such as applying unit-based multiplication to a `Food` that has no `unit` property.
+  </Accordion>
+
+  <Accordion title="Diets">
+    Add a calendar-style `Diet` object that composes recipes across days or meals:
+
+    - Define diets as a schedule of recipes.
+    - Generate diet summaries covering total nutrition, cost, and ingredient lists.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Completed
+
+No items have been moved to the completed archive yet. Items will be promoted here once they are fully shipped and stable.

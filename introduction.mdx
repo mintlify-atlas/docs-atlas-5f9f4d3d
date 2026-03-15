@@ -1,0 +1,108 @@
+---
+title: Introduction
+description: Recipes & Food Manager is a personal tool for tracking groceries, planning diets, and monitoring nutrition — all stored locally in JSON files.
+---
+
+Recipes & Food Manager is a desktop application built in Python. It lets you build a personal database of food items and recipes, plan diets, and surface statistics about your spending and nutritional intake.
+
+## Why it exists
+
+The app was created to answer practical questions about personal health and spending:
+
+- Where does grocery money actually go?
+- How many calories and which nutrients am I consuming day-to-day?
+- Is my diet balanced, and how can I adjust it?
+
+Rather than relying on third-party services, it keeps all data local and gives you full control over your food and recipe information.
+
+## What the app does
+
+<Columns cols={3}>
+  <Card title="Track food items" icon="apple-whole">
+    Store price, calorie count, and nutritional data for any food item you buy or consume.
+  </Card>
+  <Card title="Build recipes" icon="bowl-food">
+    Compose recipes from food items, including ingredient quantities and preparation time.
+  </Card>
+  <Card title="Plan diets" icon="calendar-days">
+    Arrange food and recipes into diet plans and review aggregated nutrition and cost data.
+  </Card>
+</Columns>
+
+## Core entities
+
+The application revolves around three main data types:
+
+<AccordionGroup>
+  <Accordion title="Food">
+    A Food object represents a single ingredient or product. It stores:
+
+    - Name and category
+    - Price per unit
+    - Calorie count
+    - Macronutrient breakdown (protein, fat, carbohydrates)
+  </Accordion>
+  <Accordion title="Recipe">
+    A Recipe is a collection of Food items with quantities and preparation instructions. It stores:
+
+    - List of required ingredients with amounts
+    - Estimated preparation time
+    - Derived totals for cost, calories, and nutrients
+  </Accordion>
+  <Accordion title="Diet">
+    A Diet is a plan composed of Food items and Recipes arranged over a time period. It enables:
+
+    - Day-by-day meal planning
+    - Summary statistics across the full plan
+    - Comparison of nutritional targets against actual intake
+  </Accordion>
+</AccordionGroup>
+
+## Architecture overview
+
+The project is organized into focused modules:
+
+<Tree>
+  <Tree.Folder name="src" defaultOpen>
+    <Tree.File name="main.py" />
+    <Tree.File name="functions.py" />
+    <Tree.File name="constants.py" />
+    <Tree.File name="settings.py" />
+    <Tree.File name="settings.yaml" />
+    <Tree.File name="utils.py" />
+  </Tree.Folder>
+</Tree>
+
+| Module | Responsibility |
+|---|---|
+| `main.py` | Entry point; initializes the application and UI |
+| `functions.py` | Core domain logic for food, recipe, and diet operations |
+| `constants.py` | Derived constants computed from user settings |
+| `settings.py` | Loads and merges `settings.yaml` with built-in defaults |
+| `utils.py` | Shared utility helpers |
+
+## Data storage
+
+All application data — food items, recipes, and diet plans — is persisted to local JSON files. There is no external database or network dependency. This makes the app fully portable and easy to back up.
+
+Configuration is managed through `src/settings.yaml`. On startup, `settings.py` merges your file with built-in defaults so that missing keys never cause a crash.
+
+```yaml src/settings.yaml
+template:
+  property: 0    # int
+property: 1
+```
+
+<Note>
+  The `constants.py` module reads from the merged settings at import time, so any change to `settings.yaml` takes effect on the next application start.
+</Note>
+
+## Interface
+
+The application currently targets a CLI interface, with a GUI layer built on [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) planned for future iterations.
+
+## Next steps
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Install dependencies and run the app for the first time.
+</Card>

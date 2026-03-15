@@ -1,97 +1,88 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Recipes & Food Manager"
+description: "Manage your food items, create recipes, plan diets, and track your nutrition and grocery spending — all from a simple Python app."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Get the app running and create your first food item and recipe in minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Core concepts" icon="book-open" href="/concepts/food-objects">
+    Understand Food objects, Recipe objects, and how data is stored.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Guides" icon="map" href="/guides/managing-food">
+    Step-by-step walkthroughs for every major feature.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Configuration" icon="gear" href="/configuration/settings">
+    Customize app behaviour through the YAML settings file.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What is Recipes & Food Manager?
 
-Everything you need to create world-class documentation.
+Recipes & Food Manager is a Python application that helps you take control of what you eat and what you spend on groceries. You define **Food** items — each with a price per kilogram, energy in kcal per 100 g, and optional nutritional data — and then combine them into **Recipes** that track ingredients, quantities, and preparation time.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+The app persists everything to local JSON files, so your data stays on your machine with no account or internet connection required.
 
-## Need inspiration?
+## Key features
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Food item library" icon="carrot">
+    Store foods with price (€/kg), energy (kcal/100 g), and per-unit data so every calculation is grounded in real numbers.
+  </Card>
+  <Card title="Recipe builder" icon="utensils">
+    Assemble recipes from your food library, record quantities and preparation time, and let the app compute totals automatically.
+  </Card>
+  <Card title="Diet planning" icon="calendar">
+    Plan daily or weekly diets from your saved recipes and individual foods.
+  </Card>
+  <Card title="Statistics" icon="chart-bar">
+    See breakdowns of your calorie intake, macronutrients, and grocery spending over time.
+  </Card>
+  <Card title="Local JSON storage" icon="database">
+    All data is saved to plain JSON files — easy to back up, inspect, and share.
+  </Card>
+  <Card title="YAML configuration" icon="sliders">
+    Tweak app behaviour through a simple `settings.yaml` file with sensible defaults baked in.
+  </Card>
+</CardGroup>
+
+## Project status
+
+<Info>
+  This project is actively under development. The core Food and Recipe objects are implemented. Diet planning and statistics views are on the roadmap. See the [roadmap](/project/roadmap) for full details.
+</Info>
+
+## How the data flows
+
+```
+settings.yaml  ──►  SETTINGS constant
+                         │
+                         ▼
+     Food objects  +  Recipe objects
+           │               │
+           └──────┬────────┘
+                  ▼
+          JSON data files
+                  │
+                  ▼
+          Statistics & reports
+```
+
+The app loads your food and recipe data from JSON files at startup, lets you create or modify objects in memory, and then saves everything back to disk when you are done.
+
+## Get started
+
+<Steps>
+  <Step title="Install prerequisites">
+    Make sure you have Python 3.10 or later installed, then install the required packages.
+  </Step>
+  <Step title="Clone the repository">
+    Download the source code to your machine.
+  </Step>
+  <Step title="Run the app">
+    Launch `src/main.py` to start the application.
+  </Step>
+</Steps>
+
+Head to the [quickstart guide](/quickstart) for the full walkthrough.

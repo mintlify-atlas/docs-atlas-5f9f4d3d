@@ -1,0 +1,117 @@
+---
+title: Settings
+description: Configure the Recipes & Food Manager using the settings.yaml file. User-defined values are merged with defaults at startup.
+---
+
+The application loads configuration from `src/settings.yaml` on startup. Any key you define there overrides the corresponding default. Missing keys fall back to the built-in defaults defined in `src/settings.py`.
+
+## File location
+
+```
+src/
+└── settings.yaml
+```
+
+## How settings are loaded
+
+<Steps>
+  <Step title="Read settings.yaml">
+    `settings.py` opens `src/settings.yaml` and parses it with PyYAML:
+
+    ```python
+    def open_user_settings() -> dict[str, Any]:
+        with open(r"src\settings.yaml") as file:
+            return yaml.safe_load(file)
+    ```
+  </Step>
+  <Step title="Merge with defaults">
+    The parsed user settings are merged with `default_settings` using `merge_dicts`. Every key present in the user file overrides its default counterpart. Keys absent from `settings.yaml` retain their default values. The merge is recursive, so nested objects are handled key-by-key rather than replaced wholesale.
+
+    ```python
+    SETTINGS: dict[str, Any] = merge_dicts(default_settings, user_settings)
+    ```
+  </Step>
+  <Step title="Expose the SETTINGS constant">
+    The merged result is stored in the module-level constant `SETTINGS`. All other modules import it directly:
+
+    ```python
+    from settings import SETTINGS
+    ```
+  </Step>
+</Steps>
+
+## Configuration keys
+
+<ParamField path="template.property" type="int" default="40">
+  Template configuration property. Used as `TEMPLATE_PROPERTY` in `constants.py`.
+</ParamField>
+
+<ParamField path="property" type="int" default="1">
+  Main property. Used as `PROPERTY` in `constants.py` and as the basis for computing `DERIVATE_PROPERTY`.
+</ParamField>
+
+## Default values
+
+```python settings.py
+default_settings = {
+    "template": {
+        "property": 40,
+    },
+    "property": 1
+}
+```
+
+## Current settings.yaml
+
+```yaml src/settings.yaml
+template:
+  property: 0    # int
+property: 1
+```
+
+<Note>
+  `template.property` is set to `0` in the current `settings.yaml`, which overrides the default of `40`. Set it to any integer value or remove the key entirely to fall back to the default.
+</Note>
+
+## Derived constants
+
+`constants.py` reads from `SETTINGS` and exposes typed constants for use across the codebase:
+
+```python constants.py
+from settings import SETTINGS
+
+TEMPLATE_PROPERTY: int = int(SETTINGS["template"]["property"])
+PROPERTY: int = int(SETTINGS["property"])
+DERIVATE_PROPERTY: float = float(PROPERTY) / 1000
+```
+
+| Constant | Type | Source key | Notes |
+|---|---|---|---|
+| `TEMPLATE_PROPERTY` | `int` | `template.property` | Cast from YAML scalar |
+| `PROPERTY` | `int` | `property` | Cast from YAML scalar |
+| `DERIVATE_PROPERTY` | `float` | `property` | `PROPERTY / 1000` |
+
+## Overriding a setting
+
+To change a value, edit `src/settings.yaml`. Only the keys you include are overridden; all other keys keep their defaults.
+
+**Example — raise `property` to `5`:**
+
+```yaml src/settings.yaml
+property: 5
+```
+
+After this change:
+- `PROPERTY` will be `5`
+- `DERIVATE_PROPERTY` will be `0.005`
+- `TEMPLATE_PROPERTY` will be `40` (the default, since `template.property` is no longer in the file)
+
+## merge_dicts behavior
+
+The merge function handles three cases:
+
+- **Both values are dicts** — merge recursively, so every nested key is preserved.
+- **Only the default is a dict** — return the default dict unchanged.
+- **Neither or only the override is a dict** — the override value wins.
+
+This means partial objects in `settings.yaml` are safe: you can override a single nested key without losing the sibling keys.

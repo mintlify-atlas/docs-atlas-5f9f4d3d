@@ -1,0 +1,155 @@
+---
+title: Food objects
+description: Learn how Food objects represent individual ingredients and food items, including their properties, unit handling, and nutritional calculations.
+---
+
+A Food object represents a single food item or ingredient in the system. Each Food object stores pricing and energy data, and can be multiplied by a quantity of grams (or units) to compute totals for cost and nutrition.
+
+Food inherits from `BaseClass`, which provides serialization, deserialization, an instance registry, and support for extra properties such as comments.
+
+## Properties
+
+<ResponseField name="id" type="string" required>
+  Unique name that identifies the food item. Acts as the primary key across the instance registry.
+</ResponseField>
+
+<ResponseField name="price" type="float" required>
+  Cost of the food in euros per kilogram (€/kg).
+</ResponseField>
+
+<ResponseField name="energy" type="float" required>
+  Caloric content of the food in kilocalories per 100 grams (kcal/100g).
+</ResponseField>
+
+<ResponseField name="unit" type="float">
+  Optional. Weight in grams that corresponds to one unit of the food (e.g., one egg, one slice). When set, you can multiply by a unit string such as `"2u"` instead of raw grams.
+</ResponseField>
+
+<Warning>
+  If you multiply a Food object by a unit string (e.g. `"2u"`) but the `unit` property is not set, the system falls back to 100 grams per unit and logs an alert.
+</Warning>
+
+## Quantity multiplication
+
+Multiplying a Food object by a quantity produces the total price and total energy for that amount.
+
+<Columns cols={2}>
+  <Card title="Grams" icon="weight">
+    Pass a plain number representing grams. Total price and energy are scaled proportionally from the per-kg and per-100g base values.
+  </Card>
+  <Card title="Units" icon="box">
+    Pass a string such as `"2u"` to multiply by a number of units. Each unit equals the grams defined in the `unit` property.
+  </Card>
+</Columns>
+
+### Examples
+
+```python
+# Multiply by grams
+total_price, total_kcal = apple * 150       # 150 g of apple
+
+# Multiply by units (requires `unit` property set)
+total_price, total_kcal = egg * "3u"        # 3 eggs
+```
+
+<Note>
+  Multiplying by units when `unit` is not set still returns a result (using 100 g per unit as a fallback), but a warning is emitted to the log.
+</Note>
+
+## BaseClass capabilities
+
+Food inherits all behavior from `BaseClass`:
+
+<AccordionGroup>
+  <Accordion title="Instance registry">
+    Every Food object created is stored in a class-level registry. You can retrieve any previously created instance by its `id` without reloading from disk.
+  </Accordion>
+  <Accordion title="Extra properties">
+    You can attach arbitrary extra properties (such as `comments`, `brand`, or `origin`) to any Food object. These are preserved during serialization.
+  </Accordion>
+  <Accordion title="Overwrite warning">
+    If you create a Food object with an `id` that already exists in the registry, the old object is overwritten and its previous values are logged as an alert.
+  </Accordion>
+  <Accordion title="Save and load">
+    Food objects can be serialized to and deserialized from both JSON and YAML files. See [Data storage](/concepts/data-storage) for details.
+  </Accordion>
+</AccordionGroup>
+
+## Data structure
+
+The following shows how a Food object is represented when serialized to JSON:
+
+```json
+{
+  "id": "chicken_breast",
+  "price": 8.50,
+  "energy": 165,
+  "unit": 120,
+  "comments": "Boneless, skinless"
+}
+```
+
+<Expandable title="Field descriptions">
+  <ResponseField name="id" type="string" required>
+    Unique identifier for the food item.
+  </ResponseField>
+  <ResponseField name="price" type="float" required>
+    Price in €/kg.
+  </ResponseField>
+  <ResponseField name="energy" type="float" required>
+    Energy in kcal/100g.
+  </ResponseField>
+  <ResponseField name="unit" type="float">
+    Grams per unit. Omit if unit-based multiplication is not needed.
+  </ResponseField>
+  <ResponseField name="comments" type="string">
+    Any extra notes stored as an additional property via BaseClass.
+  </ResponseField>
+</Expandable>
+
+## Python usage
+
+<Steps>
+  <Step title="Create a Food object">
+    ```python
+    chicken = Food(
+        id="chicken_breast",
+        price=8.50,       # €/kg
+        energy=165,       # kcal/100g
+        unit=120,         # grams per unit (one breast)
+        comments="Boneless, skinless"
+    )
+    ```
+  </Step>
+  <Step title="Access properties">
+    ```python
+    print(chicken.id)       # "chicken_breast"
+    print(chicken.price)    # 8.5
+    print(chicken.energy)   # 165
+    print(chicken.unit)     # 120
+    ```
+  </Step>
+  <Step title="Compute totals by grams">
+    ```python
+    price, kcal = chicken * 200   # 200 g
+    # price = 8.50 * (200 / 1000) = 1.70 €
+    # kcal  = 165  * (200 / 100)  = 330 kcal
+    ```
+  </Step>
+  <Step title="Compute totals by units">
+    ```python
+    price, kcal = chicken * "2u"  # 2 units × 120 g each = 240 g
+    ```
+  </Step>
+  <Step title="Save to file">
+    ```python
+    chicken.save("data/foods.json")
+    # or
+    chicken.save("data/foods.yaml")
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  Use meaningful `id` values (e.g. `"oat_rolled"`, `"olive_oil_extra_virgin"`) to keep the instance registry easy to search and the data files readable.
+</Tip>

@@ -1,0 +1,138 @@
+---
+title: 'Understanding statistics'
+description: 'Learn how the app calculates calorie and cost statistics from Food and Recipe objects, and how to use them to analyze your nutrition and grocery spending.'
+---
+
+The statistics system turns raw Food and Recipe data into actionable insights about your nutrition and grocery spending.
+
+<Info>
+  A dedicated statistics dashboard is on the roadmap. Today, statistics are computed programmatically through the `stats()` method on Recipe objects. See the [roadmap](/project/roadmap) for upcoming features.
+</Info>
+
+## What the app tracks
+
+<CardGroup cols={3}>
+  <Card title="Calorie intake" icon="zap">
+    Total kcal per recipe or per day, derived from each Food's energy value and the quantity used.
+  </Card>
+  <Card title="Cost" icon="euro">
+    Total ingredient cost in euros, calculated from each Food's price per kg and the quantity used.
+  </Card>
+  <Card title="Ingredient quantities" icon="scale">
+    Exact gram (or unit) amounts for every ingredient in a recipe, providing a basis for a shopping list.
+  </Card>
+</CardGroup>
+
+## Computing statistics for a recipe
+
+Call `stats()` on any `Recipe` object to get the aggregate totals.
+
+```python
+from food import Food
+from recipe import Recipe
+
+Food.from_file("foods.json")
+Recipe.from_file("recipes.json")
+
+omelette = Recipe.instances()["omelette"]
+result   = omelette.stats()
+
+print(result)
+# {
+#   "total_kcal":  ...,   # float, kcal for the full recipe
+#   "total_price": ...,   # float, € for the full recipe
+# }
+```
+
+### How the calculation works
+
+For each `(Food, quantity)` pair in the recipe:
+
+1. If the quantity is a gram value, it is used directly.
+2. If the quantity is a unit string (`"{n}u"`), it is converted to grams using `Food.unit * n`.
+3. The resulting gram value is applied to both the energy and price formulas:
+
+```
+kcal_contribution  = food.energy * grams / 100
+price_contribution = food.price  * grams / 1000
+```
+
+All per-ingredient contributions are summed to produce the recipe totals.
+
+## Comparing recipes
+
+Collect stats from multiple recipes and sort or filter them to find the most cost-effective or most calorie-dense options.
+
+```python
+recipes = Recipe.instances()
+
+summary = [
+    {
+        "id":    rid,
+        **r.stats(),
+    }
+    for rid, r in recipes.items()
+]
+
+# Sort by cost (cheapest first)
+by_cost = sorted(summary, key=lambda x: x["total_price"])
+
+# Sort by kcal (highest first)
+by_kcal = sorted(summary, key=lambda x: x["total_kcal"], reverse=True)
+
+for entry in by_cost:
+    print(f"{entry['id']:20s}  €{entry['total_price']:.2f}  {entry['total_kcal']:.0f} kcal")
+```
+
+## Economic analysis
+
+One of the core goals of the app is to track where grocery money goes. Use recipe statistics to identify which meals are driving your spending.
+
+<AccordionGroup>
+  <Accordion title="Identify expensive ingredients">
+    Compute per-ingredient cost contributions by calling the multiplication operator on each Food directly before summing.
+
+    ```python
+    omelette_ingredients = [
+        (egg,       "3u"),
+        (olive_oil, 15),
+        (tomato,    120),
+    ]
+
+    for food, qty in omelette_ingredients:
+        contribution = food * qty
+        print(f"{food.id}: €{contribution['price']:.4f}")
+    ```
+  </Accordion>
+
+  <Accordion title="Track weekly spending">
+    Sum recipe costs across your planned meals (see [Planning diets](/guides/planning-diets)) to get a weekly grocery estimate and compare it against your actual spending.
+  </Accordion>
+
+  <Accordion title="Identify critical buying patterns">
+    Sort your recipe library by cost per kcal to find the most economical sources of energy in your diet.
+
+    ```python
+    cost_per_kcal = [
+        {
+            "id": rid,
+            "cpp": s["total_price"] / s["total_kcal"] if s["total_kcal"] > 0 else float("inf"),
+        }
+        for rid, r in recipes.items()
+        for s in [r.stats()]
+    ]
+
+    cost_per_kcal.sort(key=lambda x: x["cpp"])
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Nutrition awareness
+
+Beyond cost, the stats system helps you stay aware of calorie intake and build balanced eating habits.
+
+<Tip>
+  Cross-reference kcal totals from your daily meal plan against standard daily energy requirements (typically 2000-2500 kcal for adults) to monitor whether your diet meets your goals.
+</Tip>
+
+As the roadmap progresses, the statistics system will expand to cover macronutrient breakdowns and a full nutrition dashboard.

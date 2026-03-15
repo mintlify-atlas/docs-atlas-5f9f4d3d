@@ -1,0 +1,20 @@
+---
+title: Changelog
+description: Development log for the Recipes & Food Manager. Each entry records what was built or changed in a given session.
+---
+
+This changelog is maintained as a session log — each entry captures what was accomplished when the project was actively worked on. Its purpose is to provide context when returning to the project after a gap.
+
+<Note>
+  The changelog will be populated in detail as the project matures. Early entries below document what was actually built based on the completed roadmap items.
+</Note>
+
+<Update label="2024-09-19" tags={["Foundation"]}>
+  ## Initial data model and persistence
+
+  Established the core domain objects and the JSON persistence layer that underpins the application.
+
+  - Implemented the `Food` object with `id`, `price` (€/kg), and `energy` (kcal/100g) properties.
+  - Implemented the `Recipe` object containing a list of `Food` items with quantities, preparation time, and comments.
+  - Implemented loading and saving data to JSON databases, enabling the food and recipe catalogs to persist between sessions.
+</Update>

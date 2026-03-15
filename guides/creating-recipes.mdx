@@ -1,0 +1,138 @@
+---
+title: 'Creating recipes'
+description: 'Build Recipe objects from Food items, compute aggregate nutrition and cost statistics, and persist recipes to JSON.'
+---
+
+A Recipe combines Food items and their quantities into a single object you can analyze, save, and reuse in diet planning.
+
+## Prerequisites
+
+Before creating a recipe, the Food items you want to use must exist in your library.
+
+<Info>
+  If you have not yet created or loaded your Food items, follow the [Managing food items](/guides/managing-food) guide first.
+</Info>
+
+## Recipe object properties
+
+| Property | Description |
+|---|---|
+| `id` / `name` | Unique identifier for the recipe. |
+| `ingredients` | List of Food items paired with quantities (grams or unit strings). |
+| `time` | Preparation time in minutes. |
+| `comments` | Optional free-text notes about the recipe. |
+
+## Building a recipe
+
+<Steps>
+  <Step title="Prepare your Food items">
+    Load or create the foods you need.
+
+    ```python
+    from food import Food
+    from recipe import Recipe
+
+    Food.from_file("foods.json")
+
+    olive_oil = Food.instances()["olive_oil"]
+    egg       = Food.instances()["egg"]
+    tomato    = Food.instances()["tomato"]
+    ```
+  </Step>
+
+  <Step title="Create the Recipe object">
+    Pass the id, ingredients with quantities, preparation time, and an optional comment.
+
+    ```python
+    omelette = Recipe(
+        id="omelette",
+        ingredients=[
+            (egg,       "3u"),   # 3 eggs (unit-based)
+            (olive_oil, 15),     # 15 g olive oil
+            (tomato,    120),    # 120 g tomato
+        ],
+        time=10,                 # minutes
+        comments="Classic Spanish omelette without potato.",
+    )
+    ```
+
+    <Tip>
+      Use the `"{number}u"` syntax for ingredients measured in units (see [Managing food items](/guides/managing-food#calculating-by-units)).
+    </Tip>
+  </Step>
+
+  <Step title="Compute statistics">
+    Call the stats method to get totals across all ingredients.
+
+    ```python
+    stats = omelette.stats()
+    print(stats)
+    # {
+    #   "total_kcal": ...,
+    #   "total_price": ...,
+    # }
+    ```
+
+    The method iterates over each `(Food, quantity)` pair, performs the multiplication, and sums the results.
+  </Step>
+</Steps>
+
+## Saving recipes to JSON
+
+```python
+Recipe.save_to_file("recipes.json")
+```
+
+Example `recipes.json` structure:
+
+```json
+[
+  {
+    "id": "omelette",
+    "time": 10,
+    "comments": "Classic Spanish omelette without potato.",
+    "ingredients": [
+      { "food": "egg",       "quantity": "3u" },
+      { "food": "olive_oil", "quantity": 15 },
+      { "food": "tomato",    "quantity": 120 }
+    ]
+  }
+]
+```
+
+<Note>
+  Ingredients reference food items by `id`. When loading a recipe file, the corresponding Food objects must already be present in the library.
+</Note>
+
+## Loading recipes from JSON
+
+```python
+Food.from_file("foods.json")     # load foods first
+Recipe.from_file("recipes.json") # then load recipes
+```
+
+Like Food objects, recipes inherit from `BaseClass`, so extra properties (such as `comments`) round-trip safely through serialization.
+
+## Understanding the stats method
+
+<AccordionGroup>
+  <Accordion title="Total kcal calculation">
+    For each ingredient, the recipe multiplies the Food's `energy` (kcal/100g) by the quantity in grams, then sums across all ingredients.
+
+    ```
+    total_kcal = sum(food.energy * grams / 100  for each ingredient)
+    ```
+  </Accordion>
+
+  <Accordion title="Total cost calculation">
+    For each ingredient, the recipe multiplies the Food's `price` (€/kg) by the quantity in grams, then sums across all ingredients.
+
+    ```
+    total_price = sum(food.price * grams / 1000  for each ingredient)
+    ```
+  </Accordion>
+
+  <Accordion title="Unit ingredient handling">
+    Ingredients expressed as `"{n}u"` are converted to grams using the Food's `unit` property before the calculation runs. If the Food has no `unit` property, 100 g is used as a fallback and an alert is logged.
+  </Accordion>
+</AccordionGroup>

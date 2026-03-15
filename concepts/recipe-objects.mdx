@@ -1,0 +1,163 @@
+---
+title: Recipe objects
+description: Learn how Recipe objects group Food items with quantities to represent full meals, and how they compute aggregate nutrition and cost statistics.
+---
+
+A Recipe object represents a complete dish or meal. It holds a named list of Food items paired with their quantities, a preparation time, and optional comments. The Recipe exposes a method that aggregates statistics across all its constituent Food objects, returning totals for cost and nutrition.
+
+Recipe inherits from `BaseClass`, giving it the same serialization, deserialization, instance registry, and extra-properties support as [Food objects](/concepts/food-objects).
+
+## Properties
+
+<ResponseField name="name" type="string" required>
+  Unique identifier for the recipe. Also serves as the display name and the key in the instance registry.
+</ResponseField>
+
+<ResponseField name="ingredients" type="list" required>
+  A list of entries pairing a Food object (or its `id`) with a quantity. Quantities can be raw grams or unit strings such as `"2u"`.
+</ResponseField>
+
+<ResponseField name="time" type="number" required>
+  Preparation time in minutes.
+</ResponseField>
+
+<ResponseField name="comments" type="string">
+  Free-text notes about the recipe, stored via the BaseClass extra-properties mechanism.
+</ResponseField>
+
+## Statistics method
+
+Calling the stats method on a Recipe iterates over every ingredient, multiplies each Food object by its assigned quantity, and sums the results.
+
+```python
+stats = omelette.get_stats()
+# Returns total cost (€) and total energy (kcal) for the full recipe
+```
+
+The returned object includes:
+
+<Expandable title="Returned fields">
+  <ResponseField name="total_price" type="float">
+    Sum of individual ingredient costs in euros.
+  </ResponseField>
+  <ResponseField name="total_energy" type="float">
+    Sum of individual ingredient energies in kilocalories.
+  </ResponseField>
+</Expandable>
+
+<Note>
+  The stats method relies on each Food object being present in the instance registry. Load your food database before calling stats on any recipe.
+</Note>
+
+## BaseClass capabilities
+
+Recipe shares all BaseClass behavior with Food:
+
+<AccordionGroup>
+  <Accordion title="Instance registry">
+    Every Recipe object is stored in a class-level registry keyed by `name`. Retrieve any recipe without reloading from disk.
+  </Accordion>
+  <Accordion title="Extra properties">
+    Attach arbitrary extra properties (e.g. `tags`, `source`, `servings`) beyond the core fields. These are preserved during serialization.
+  </Accordion>
+  <Accordion title="Overwrite warning">
+    Creating a Recipe with a `name` that already exists in the registry overwrites the previous entry and logs an alert with the old values.
+  </Accordion>
+  <Accordion title="Save and load">
+    Recipes serialize to and deserialize from both JSON and YAML. See [Data storage](/concepts/data-storage) for file format details.
+  </Accordion>
+</AccordionGroup>
+
+## Data structure
+
+```json
+{
+  "name": "veggie_omelette",
+  "time": 15,
+  "comments": "Quick high-protein breakfast",
+  "ingredients": [
+    { "food_id": "egg",          "quantity": "3u"  },
+    { "food_id": "bell_pepper",  "quantity": 80    },
+    { "food_id": "olive_oil",    "quantity": 10    },
+    { "food_id": "salt",         "quantity": 2     }
+  ]
+}
+```
+
+<Expandable title="Field descriptions">
+  <ResponseField name="name" type="string" required>
+    Unique recipe identifier.
+  </ResponseField>
+  <ResponseField name="time" type="number" required>
+    Preparation time in minutes.
+  </ResponseField>
+  <ResponseField name="comments" type="string">
+    Optional free-text notes.
+  </ResponseField>
+  <ResponseField name="ingredients" type="array" required>
+    List of Food references with quantities.
+    <Expandable title="ingredient fields">
+      <ResponseField name="food_id" type="string" required>
+        The `id` of the Food object to use.
+      </ResponseField>
+      <ResponseField name="quantity" type="number | string" required>
+        Grams as a number, or a unit string such as `"2u"`.
+      </ResponseField>
+    </Expandable>
+  </ResponseField>
+</Expandable>
+
+## Python usage
+
+<Steps>
+  <Step title="Ensure Food objects are loaded">
+    The recipe's stats method looks up each food in the registry. Load your food database first.
+
+    ```python
+    Food.load_from_file("data/foods.json")
+    ```
+  </Step>
+  <Step title="Create a Recipe object">
+    ```python
+    omelette = Recipe(
+        name="veggie_omelette",
+        time=15,
+        comments="Quick high-protein breakfast",
+        ingredients=[
+            {"food_id": "egg",         "quantity": "3u"},
+            {"food_id": "bell_pepper", "quantity": 80},
+            {"food_id": "olive_oil",   "quantity": 10},
+        ]
+    )
+    ```
+  </Step>
+  <Step title="Compute aggregate statistics">
+    ```python
+    stats = omelette.get_stats()
+    print(stats["total_price"])   # e.g. 0.87 €
+    print(stats["total_energy"])  # e.g. 312 kcal
+    ```
+  </Step>
+  <Step title="Save to file">
+    ```python
+    omelette.save("data/recipes.json")
+    ```
+  </Step>
+</Steps>
+
+## How recipes use the Food library
+
+Recipes do not embed full Food data. They reference Food objects by `id`. This means:
+
+<Columns cols={2}>
+  <Card title="Single source of truth" icon="database">
+    Update a Food object's price or energy once, and every recipe that includes it reflects the change automatically on the next stats computation.
+  </Card>
+  <Card title="Shared ingredients" icon="share-2">
+    The same Food object (e.g. `"olive_oil"`) can appear in many recipes without duplicating data.
+  </Card>
+</Columns>
+
+<Tip>
+  Plan your Food library first. A complete, accurate set of Food objects makes recipe statistics reliable.
+</Tip>
